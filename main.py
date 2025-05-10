@@ -51,14 +51,24 @@ async def main1():
             llm_config = LLMConfig(provider=provider, api_token=os.getenv('GLM_API_KEY'),base_url=base_url), 
             # schema=OpenAIModelFee.model_json_schema(),
             extraction_type="text",   ## extraction_type: "block" or "schema" or text.
-            instruction="""请帮我提取出网页中间的正文的全部信息，不包含广告、评论和网页两侧的其他信息。信息以markdown的格式展示"""
+            instruction="""请帮我提取出网页中间的正文的全部信息，不包含广告、评论和网页两侧的其他信息。
+要求：
+其中的图片链接和非广告链接不要省略
+如果涉及到链接不要插入空格、换行等会使链接失效的操作
+信息以markdown文本的格式展示
+
+示例:
+```markdown
+正文信息
+```
+"""
         ),            
         cache_mode=CacheMode.BYPASS,
     )
     
     async with AsyncWebCrawler(config=browser_config) as crawler:
         result = await crawler.arun(
-            url='https://bigmodel.cn/dev/activities/free/glm-4-flash',
+            url='https://blog.csdn.net/qq_36387683/article/details/80578480',
             config=run_config
         )
         # print(result.extracted_content)
