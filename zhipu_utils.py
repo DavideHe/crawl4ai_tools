@@ -15,6 +15,7 @@ from crawl4ai.utils import (
 )
 from crawl4ai.prompts import PROMPT_EXTRACT_BLOCKS, PROMPT_EXTRACT_BLOCKS_WITH_INSTRUCTION, PROMPT_EXTRACT_SCHEMA_WITH_INSTRUCTION, JSON_SCHEMA_BUILDER_XPATH, PROMPT_EXTRACT_INFERRED_SCHEMA
 from crawl4ai.models import TokenUsage
+from prompts import PROMPT_EXTRACT_TEXT_WITH_INSTRUCTION
 
 class LLMExtractionStrategyCustom(LLMExtractionStrategy):
         
@@ -55,6 +56,9 @@ class LLMExtractionStrategyCustom(LLMExtractionStrategy):
 
         if self.extract_type == "schema" and not self.schema:
             prompt_with_variables = PROMPT_EXTRACT_INFERRED_SCHEMA
+        
+        if self.extract_type == "text":
+            prompt_with_variables = PROMPT_EXTRACT_TEXT_WITH_INSTRUCTION
 
         for variable in variable_values:
             prompt_with_variables = prompt_with_variables.replace(
@@ -62,10 +66,10 @@ class LLMExtractionStrategyCustom(LLMExtractionStrategy):
             )
 
         try:
-            # print("-------------------------------prompt_with_variables-----------------------------")
-            # print(prompt_with_variables)
+            print("-------------------------------prompt_with_variables-----------------------------")
+            print(prompt_with_variables)
             if "glm" in self.llm_config.provider.lower():
-                # print("----------------------------custom_completion processing------------------------------------")
+                print("----------------------------custom_completion processing------------------------------------")
                 response = self.custom_completion(
                     self.llm_config.provider,
                     prompt_with_variables,
@@ -118,6 +122,11 @@ class LLMExtractionStrategyCustom(LLMExtractionStrategy):
                     elif isinstance(blocks, list):
                         # If it is a list then assign that to blocks
                         blocks = blocks
+                elif "<blocks>" not in response or "</blocks>" not in response:
+                    blocks = [{"index": 0,
+                            "content":response,
+                            "error": False,
+                            }]
                 else: 
                     # blocks = extract_xml_data(["blocks"], response.choices[0].message.content)["blocks"]
                     blocks = extract_xml_data(["blocks"], response)["blocks"]
